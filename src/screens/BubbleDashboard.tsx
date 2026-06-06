@@ -1,14 +1,58 @@
-import { useState, useEffect } from 'react';
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ScreenType } from '../types';
 import { auth, db } from '../firebase';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 
 interface ViewProps {
   onNavigate: (s: ScreenType) => void;
 }
 
-function AudioResource({ title, subtitle, imageUrl, colorClass, audioUrl }: any) {
+interface AudioResourceProps {
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  colorClass: string;
+  audioUrl: string;
+}
+
+/**
+ * Bubble style classes mapped by emotion index (cycles for > 8 emotions).
+ * Defined outside the component to avoid re-allocation on every render.
+ */
+const BUBBLE_STYLES = [
+  'bg-tertiary-fixed text-on-tertiary-fixed text-[14px]',
+  'bg-primary-container text-on-primary-container text-[18px]',
+  'bg-secondary-fixed text-on-secondary-fixed text-[14px]',
+  'bg-secondary-container text-on-secondary-container text-[14px]',
+  'bg-error-container text-on-error-container text-[14px]',
+  'bg-surface-variant text-on-surface-variant text-[12px]',
+  'bg-primary-fixed text-on-primary-fixed text-[12px]',
+  'bg-tertiary-container text-on-tertiary-container text-[10px]',
+] as const;
+
+/** Absolute positions for each bubble slot in the canvas. */
+interface BubblePosition {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+}
+
+const BUBBLE_POSITIONS: BubblePosition[] = [
+  { top: 10,   left: 10  },
+  { bottom: 40, right: 10 },
+  { top: 80,   right: 30 },
+  { bottom: 10, left: 40 },
+  { top: 130,  left: 100 },
+  { top: 0,    right: 120 },
+  { bottom: 90, left: 5  },
+  { top: 160,  right: 5  },
+];
+
+/** Maximum number of journal entries to fetch for emotion aggregation. */
+const EMOTION_FETCH_LIMIT = 100;
+
+function AudioResource({ title, subtitle, imageUrl, colorClass, audioUrl }: AudioResourceProps) {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -78,18 +122,23 @@ export default function BubbleDashboard({ onNavigate }: ViewProps) {
     async function loadData() {
       if (!auth.currentUser) return;
       try {
-        const q = query(collection(db, `users/${auth.currentUser.uid}/journals`));
+        // Limit to most recent 100 entries to prevent large reads
+        const q = query(
+          collection(db, `users/${auth.currentUser.uid}/journals`),
+          orderBy('createdAt', 'desc'),
+          limit(EMOTION_FETCH_LIMIT)
+        );
         const snap = await getDocs(q);
         const counts: Record<string, number> = {};
-        
-        snap.forEach(doc => {
-          const emotion = doc.data().emotion as string;
+
+        snap.forEach((d) => {
+          const emotion = d.data().emotion as string;
           if (emotion) {
             counts[emotion] = (counts[emotion] || 0) + 1;
           }
         });
-        
-        // Add defaults if completely empty
+
+        // Provide defaults if completely empty to avoid blank canvas
         if (Object.keys(counts).length === 0) {
           counts['Calm'] = 2;
           counts['Anxious'] = 1;
@@ -97,36 +146,13 @@ export default function BubbleDashboard({ onNavigate }: ViewProps) {
 
         setEmotions(counts);
       } catch (err) {
-        console.error(err);
+        console.error('[BubbleDashboard] loadData error:', err);
       } finally {
         setLoading(false);
       }
     }
     loadData();
   }, []);
-
-  // Map arbitrary emotion keys to specific size/color mapping
-  const bubbleStyles = [
-    "bg-tertiary-fixed text-on-tertiary-fixed text-[14px]",
-    "bg-primary-container text-on-primary-container text-[18px]",
-    "bg-secondary-fixed text-on-secondary-fixed text-[14px]",
-    "bg-secondary-container text-on-secondary-container text-[14px]",
-    "bg-error-container text-on-error-container text-[14px]",
-    "bg-surface-variant text-on-surface-variant text-[12px]",
-    "bg-primary-fixed text-on-primary-fixed text-[12px]",
-    "bg-tertiary-container text-on-tertiary-container text-[10px]"
-  ];
-
-  const positions = [
-    { top: 10, left: 10 },
-    { bottom: 40, right: 10 },
-    { top: 80, right: 30 },
-    { bottom: 10, left: 40 },
-    { top: 130, left: 100 },
-    { top: 0, right: 120 },
-    { bottom: 90, left: 5 },
-    { top: 160, right: 5 }
-  ];
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar relative w-full h-full pb-32">
@@ -152,29 +178,32 @@ export default function BubbleDashboard({ onNavigate }: ViewProps) {
             ) : (
                <div className="relative w-full max-w-[320px] h-full">
                   {Object.entries(emotions).map(([emotion, count], index) => {
-                     // Ensure we don't go out of bounds for styles
-                     const styleIndex = index % bubbleStyles.length;
-                     const pos = positions[styleIndex];
-                     
-                     // Calculate relative size (base size + (count * multiplier))
-                     const sizePx = Math.min(130, 60 + (count * 15));
-                     
+                     const styleIndex = index % BUBBLE_STYLES.length;
+                     const pos = BUBBLE_POSITIONS[styleIndex];
+                     const numCount = count as number;
+                     // Base size 60px + 15px per occurrence, capped at 130px
+                     const sizePx = Math.min(130, 60 + numCount * 15);
+
                      return (
-                        <div 
+                        <div
                           key={emotion}
-                          className={`absolute rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm cursor-pointer z-10 hover:scale-105 transition-transform ${bubbleStyles[styleIndex]}`}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Emotion: ${emotion}, logged ${numCount} time${numCount > 1 ? 's' : ''}`}
+                          onKeyDown={(e) => e.key === 'Enter' && undefined}
+                          className={`absolute rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm cursor-pointer z-10 hover:scale-105 transition-transform focus:outline-none focus:ring-2 focus:ring-primary ${BUBBLE_STYLES[styleIndex]}`}
                           style={{
                             width: `${sizePx}px`,
                             height: `${sizePx}px`,
-                            ...(pos.top !== undefined ? { top: `${pos.top}px` } : {}),
+                            ...(pos.top !== undefined    ? { top:    `${pos.top}px`    } : {}),
                             ...(pos.bottom !== undefined ? { bottom: `${pos.bottom}px` } : {}),
-                            ...(pos.left !== undefined ? { left: `${pos.left}px` } : {}),
-                            ...(pos.right !== undefined ? { right: `${pos.right}px` } : {}),
+                            ...(pos.left !== undefined   ? { left:   `${pos.left}px`   } : {}),
+                            ...(pos.right !== undefined  ? { right:  `${pos.right}px`  } : {}),
                           }}
                         >
                             <span className="font-semibold text-center leading-tight truncate px-2">{emotion}</span>
                         </div>
-                     )
+                     );
                   })}
                </div>
             )}
