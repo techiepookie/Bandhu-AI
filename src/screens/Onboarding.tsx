@@ -55,12 +55,12 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
           <div className="flex flex-col gap-6 animate-[fadeInUp_0.4s_ease-out_forwards]">
             <h1 className="text-[28px] font-bold text-on-surface leading-tight mb-2">Welcome! Let's get to know you.</h1>
             <div>
-              <label className="block text-[14px] font-medium text-on-surface mb-2">First Name</label>
-              <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="What should we call you?" />
+              <label htmlFor="onboard-name" className="block text-[14px] font-medium text-on-surface mb-2">First Name</label>
+              <input id="onboard-name" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} aria-required="true" className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="What should we call you?" />
             </div>
             <div>
-              <label className="block text-[14px] font-medium text-on-surface mb-2">Age</label>
-              <input type="number" value={age} onChange={e => setAge(e.target.value)} className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="Your age" />
+              <label htmlFor="onboard-age" className="block text-[14px] font-medium text-on-surface mb-2">Age</label>
+              <input id="onboard-age" type="number" value={age} onChange={e => setAge(e.target.value)} aria-required="false" className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="Your age" />
             </div>
           </div>
         );
@@ -87,12 +87,12 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
           <div className="flex flex-col gap-6 animate-[fadeInUp_0.4s_ease-out_forwards]">
             <h1 className="text-[28px] font-bold text-on-surface leading-tight mb-2">Tell us about your routine</h1>
             <div>
-              <label className="block text-[14px] font-medium text-on-surface mb-2">Daily Study Hours</label>
-              <input type="number" value={studyHours} onChange={e => setStudyHours(e.target.value)} className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="e.g. 8" />
+              <label htmlFor="onboard-study-hours" className="block text-[14px] font-medium text-on-surface mb-2">Daily Study Hours</label>
+              <input id="onboard-study-hours" type="number" value={studyHours} onChange={e => setStudyHours(e.target.value)} className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="e.g. 8" />
             </div>
             <div>
-              <label className="block text-[14px] font-medium text-on-surface mb-2">Average Sleep Hours</label>
-              <input type="number" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="e.g. 6" />
+              <label htmlFor="onboard-sleep-hours" className="block text-[14px] font-medium text-on-surface mb-2">Average Sleep Hours</label>
+              <input id="onboard-sleep-hours" type="number" value={sleepHours} onChange={e => setSleepHours(e.target.value)} className="w-full border border-outline-variant rounded-xl px-4 py-4 focus:border-primary text-on-surface bg-surface-container-low" placeholder="e.g. 6" />
             </div>
           </div>
         );
@@ -150,7 +150,7 @@ export default function Onboarding({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col pt-8 pb-32 px-6 relative z-10 w-full h-full bg-background transition-colors duration-500">
       <header className="flex items-center justify-between mb-8 w-full">
-         <button onClick={() => setStep(step > 1 ? step - 1 : 1)} className={`w-10 h-10 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-variant transition-colors ${step === 1 ? 'opacity-0 pointer-events-none' : ''}`}>
+         <button onClick={() => setStep(step > 1 ? step - 1 : 1)} aria-label="Go to previous step" className={`w-10 h-10 rounded-full flex items-center justify-center bg-surface-container hover:bg-surface-variant transition-colors ${step === 1 ? 'opacity-0 pointer-events-none' : ''}`}>
              <span className="material-symbols-outlined text-on-surface">arrow_back</span>
          </button>
          <div className="flex gap-2">

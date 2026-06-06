@@ -177,7 +177,7 @@ export default function Chat({ onBack }: ChatProps) {
         </div>
 
         {messages.length === 0 && !loading && (
-          <div className="text-center text-on-surface-variant mt-10" aria-live="polite">
+          <div className="text-center text-on-surface-variant mt-10">
             Say hi to Bandhu!
           </div>
         )}

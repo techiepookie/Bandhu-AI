@@ -66,14 +66,14 @@ export default function EmotionSnaps({ onNavigate }: ViewProps) {
       {showCamera && (
         <div className="fixed inset-0 z-50 bg-black flex flex-col">
            <div className="absolute top-0 w-full p-6 flex justify-end z-50">
-               <button onClick={stopCamera} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white">
+               <button onClick={stopCamera} aria-label="Close camera" className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white">
                    <span className="material-symbols-outlined">close</span>
                </button>
            </div>
            <video ref={videoRef} autoPlay playsInline className="flex-1 w-full h-full object-cover" />
            <div className="absolute bottom-10 w-full flex justify-center z-50">
-               <button onClick={capturePhoto} className="w-20 h-20 bg-white/30 rounded-full border-4 border-white flex justify-center items-center backdrop-blur-md">
-                   <div className="w-14 h-14 bg-white rounded-full"></div>
+               <button onClick={capturePhoto} aria-label="Take photo" className="w-20 h-20 bg-white/30 rounded-full border-4 border-white flex justify-center items-center backdrop-blur-md">
+                   <div className="w-14 h-14 bg-white rounded-full" aria-hidden="true" />
                </button>
            </div>
            <canvas ref={canvasRef} className="hidden" />
@@ -82,7 +82,7 @@ export default function EmotionSnaps({ onNavigate }: ViewProps) {
 
       {/* Main UI */}
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md flex justify-between items-center w-full px-6 py-4">
-        <button onClick={() => onNavigate('home')} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors">
+        <button onClick={() => onNavigate('home')} aria-label="Go back to home" className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors">
             <span className="material-symbols-outlined">arrow_back</span>
         </button>
         <h1 className="text-[24px] font-bold text-primary tracking-tight">Bandhu</h1>
@@ -161,7 +161,7 @@ export default function EmotionSnaps({ onNavigate }: ViewProps) {
       </main>
 
       <div className="fixed bottom-24 left-0 right-0 flex justify-center z-40 px-6 max-w-md mx-auto">
-        <button onClick={startCamera} className="bg-primary text-on-primary rounded-full px-6 py-4 shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
+        <button onClick={startCamera} aria-label="Open camera to capture a moment" className="bg-primary text-on-primary rounded-full px-6 py-4 shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>camera</span>
           <span className="text-[16px] font-semibold tracking-wide">Capture a moment</span>
         </button>

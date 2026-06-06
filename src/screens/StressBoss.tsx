@@ -8,7 +8,7 @@ export default function StressBoss({ onNavigate }: ViewProps) {
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar relative w-full h-full pb-32">
       <header className="flex justify-between items-center w-full px-6 py-6 sticky top-0 z-40">
-        <button onClick={() => onNavigate('home')} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors">
+        <button onClick={() => onNavigate('home')} aria-label="Go back to home" className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors">
             <span className="material-symbols-outlined text-on-surface">arrow_back</span>
         </button>
         <div className="text-[20px] font-bold text-primary">Bandhu</div>
@@ -44,7 +44,7 @@ export default function StressBoss({ onNavigate }: ViewProps) {
         <section className="mb-10 w-full">
             <h2 className="text-[12px] font-bold text-on-surface-variant mb-4 uppercase tracking-wider">Choose your attack</h2>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 snap-x">
-                <button className="snap-start flex-shrink-0 w-[140px] flex flex-col items-center p-5 bg-tertiary-container rounded-[2rem] text-on-tertiary-container hover:opacity-90 active:scale-95 transition-all shadow-sm border border-white/20">
+                <button aria-label="Start breathing exercise" className="snap-start flex-shrink-0 w-[140px] flex flex-col items-center p-5 bg-tertiary-container rounded-[2rem] text-on-tertiary-container hover:opacity-90 active:scale-95 transition-all shadow-sm border border-white/20">
                     <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center mb-3 backdrop-blur-sm">
                         <span className="material-symbols-outlined text-[24px]">air</span>
                     </div>
@@ -52,7 +52,7 @@ export default function StressBoss({ onNavigate }: ViewProps) {
                     <span className="text-[12px] font-bold bg-white/40 px-3 py-1 rounded-full uppercase tracking-wider">-15 HP</span>
                 </button>
 
-                <button className="snap-start flex-shrink-0 w-[140px] flex flex-col items-center p-5 bg-primary-container rounded-[2rem] text-on-primary-container hover:opacity-90 active:scale-95 transition-all shadow-sm border border-white/20">
+                <button aria-label="Walk 10 minutes" className="snap-start flex-shrink-0 w-[140px] flex flex-col items-center p-5 bg-primary-container rounded-[2rem] text-on-primary-container hover:opacity-90 active:scale-95 transition-all shadow-sm border border-white/20">
                     <div className="w-12 h-12 rounded-full bg-white/30 flex items-center justify-center mb-3 backdrop-blur-sm">
                         <span className="material-symbols-outlined text-[24px]">directions_walk</span>
                     </div>

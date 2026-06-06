@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ScreenType } from '../types';
 import { auth, db } from '../firebase';
-import { collection, query, addDoc, onSnapshot, serverTimestamp, orderBy, updateDoc, doc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import {
+  collection, query, addDoc, onSnapshot, serverTimestamp,
+  orderBy, updateDoc, doc, arrayUnion, arrayRemove, getDoc, limit
+} from 'firebase/firestore';
 
 interface ViewProps {
   onNavigate: (s: ScreenType) => void;
@@ -23,22 +26,22 @@ export default function StudyTribe({ onNavigate }: ViewProps) {
   useEffect(() => {
     if (!auth.currentUser) return;
     setUserName(auth.currentUser.displayName || 'Anonymous Explorer');
-    // For demo purposes getting user profile directly in component
-    import('firebase/firestore').then(({ getDoc, doc }) => {
-       if (auth.currentUser) {
-           getDoc(doc(db, 'users', auth.currentUser.uid)).then(snap => {
-               if(snap.exists()) {
-                   setUserName(snap.data().name || 'Anonymous');
-                   setUserTribe(snap.data().tribeId || null);
-               }
-           });
-       }
+    // Fetch user profile with static import (no dynamic import)
+    getDoc(doc(db, 'users', auth.currentUser.uid)).then(snap => {
+      if (snap.exists()) {
+        setUserName(snap.data().name || 'Anonymous');
+        setUserTribe(snap.data().tribeId || null);
+      }
     });
   }, []);
 
   useEffect(() => {
     if (!activeTribe) return;
-    const q = query(collection(db, `tribes/${activeTribe.id}/posts`), orderBy('createdAt', 'desc'));
+    const q = query(
+      collection(db, `tribes/${activeTribe.id}/posts`),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
     const unsub = onSnapshot(q, snap => {
       setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
@@ -89,11 +92,11 @@ export default function StudyTribe({ onNavigate }: ViewProps) {
       return (
         <div className="flex-1 overflow-hidden flex flex-col bg-background w-full h-full relative">
             <header className="flex justify-between items-center w-full px-6 py-4 bg-surface-container-lowest/80 backdrop-blur-md border-b border-surface-variant z-40">
-                <button onClick={() => setActiveTribe(null)} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors">
+                <button onClick={() => setActiveTribe(null)} aria-label="Go back to tribes list" className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-variant transition-colors">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
                 <h1 className="text-[18px] font-bold text-on-surface">{activeTribe.name}</h1>
-                <button onClick={handleLeaveTribe} className="text-error text-[14px] font-semibold">Leave</button>
+                <button onClick={handleLeaveTribe} aria-label={`Leave ${activeTribe.name}`} className="text-error text-[14px] font-semibold">Leave</button>
             </header>
 
             <main className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col gap-4 pb-24">
@@ -127,14 +130,18 @@ export default function StudyTribe({ onNavigate }: ViewProps) {
 
             <div className="absolute bottom-0 left-0 w-full p-4 bg-surface-container-lowest border-t border-surface-variant z-50">
                 <div className="flex flex-row items-center gap-2">
-                   <input 
-                      type="text" 
+                   <label htmlFor="tribe-post-input" className="sr-only">Post in {activeTribe.name}</label>
+                   <input
+                      id="tribe-post-input"
+                      type="text"
                       value={newPost}
                       onChange={e => setNewPost(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handlePost()}
                       placeholder={`Post in ${activeTribe.name}...`}
+                      aria-label={`Post in ${activeTribe.name}`}
                       className="flex-1 bg-surface-container rounded-full px-4 py-3 text-[14px] outline-none border border-outline-variant focus:border-primary"
                    />
-                   <button onClick={handlePost} disabled={!newPost.trim()} className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center disabled:opacity-50 active:scale-95 transition-transform shrink-0">
+                   <button onClick={handlePost} disabled={!newPost.trim()} aria-label="Send post" className="w-12 h-12 rounded-full bg-primary text-on-primary flex items-center justify-center disabled:opacity-50 active:scale-95 transition-transform shrink-0">
                        <span className="material-symbols-outlined">send</span>
                    </button>
                 </div>
