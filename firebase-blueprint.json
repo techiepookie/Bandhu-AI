@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "energyScore": { "type": "number", "description": "Mental Energy Score 0-100" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["name", "email", "createdAt", "updatedAt"]
+    },
+    "Journal": {
+      "title": "Journal",
+      "description": "AI Reflection Journal",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "emotion": { "type": "string" },
+        "stressTrigger": { "type": "string" },
+        "confidenceLevel": { "type": "string" },
+        "energy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["text", "createdAt"]
+    },
+    "Mood": {
+      "title": "Mood",
+      "description": "One-tap Mood Check-in",
+      "type": "object",
+      "properties": {
+        "emoji": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["emoji", "createdAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "AI Companion Chat message",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["role", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/users/{userId}/journals/{journalId}": {
+      "schema": { "$ref": "#/entities/Journal" },
+      "description": "User reflection journals"
+    },
+    "/users/{userId}/moods/{moodId}": {
+      "schema": { "$ref": "#/entities/Mood" },
+      "description": "User daily moods"
+    },
+    "/users/{userId}/chatMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "User chat history with Bandhu"
+    }
+  }
+}

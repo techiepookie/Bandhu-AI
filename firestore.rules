@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation definitions
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'createdAt', 'updatedAt']) && 
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 150 &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             (data.get('energyScore', 80) is number) &&
+             (data.get('exam', 'none') is string);
+    }
+
+    function isValidJournal(data) {
+      return data.keys().hasAll(['text', 'createdAt']) &&
+             data.text is string && data.text.size() <= 10000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMood(data) {
+      return data.keys().hasAll(['emoji', 'createdAt']) &&
+             data.emoji is string && data.emoji.size() <= 10 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidChatMessage(data) {
+      return data.keys().hasAll(['role', 'content', 'createdAt']) &&
+             data.role is string && (data.role == 'user' || data.role == 'model') &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.createdAt is timestamp;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if false; // Blanket lists forbidden
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId && isValidUser(incoming()) && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+    }
+
+    match /users/{userId}/journals/{journalId} {
+      allow read: if isSignedIn() && request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId));
+      allow create: if isSignedIn() && isValidId(userId) && isValidId(journalId) && request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId)) && isValidJournal(incoming()) && incoming().createdAt == request.time;
+      allow update: if false; // Immutable
+      allow delete: if false;
+    }
+
+    match /users/{userId}/moods/{moodId} {
+      allow read: if isSignedIn() && request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId));
+      allow create: if isSignedIn() && isValidId(userId) && isValidId(moodId) && request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId)) && isValidMood(incoming()) && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /users/{userId}/chatMessages/{messageId} {
+      allow read: if isSignedIn() && request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId));
+      allow create: if isSignedIn() && isValidId(userId) && isValidId(messageId) && request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId)) && isValidChatMessage(incoming()) && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
+
